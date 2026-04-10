@@ -1,9 +1,10 @@
 import React from 'react'
+import Section1 from './components/Section1.jsx/Section1'
 
 const App = () => {
   return (
-    <div className='bg-amber-500'>
-      hello
+    <div className='min-h-screen'>
+      < Section1 />
     </div>
   )
 }
