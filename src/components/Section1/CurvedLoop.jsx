@@ -1,13 +1,12 @@
 import { useRef, useEffect, useState, useMemo, useId } from 'react';
 
-const StraightMarquee = ({
+const CurvedLoop = ({
   marqueeText = 'ORION INK • ',
   speed = 2,
   className = '',
   direction = 'left',
   interactive = true
 }) => {
-  // Add extra spaces for better looping
   const text = useMemo(() => marqueeText + '\u00A0', [marqueeText]);
 
   const measureRef = useRef(null);
@@ -17,7 +16,6 @@ const StraightMarquee = ({
   const uid = useId();
   const pathId = `line-${uid}`;
   
-  // A long straight line to ensure text doesn't fall off the path
   const pathD = `M-5000,120 L5000,120`;
 
   const dragRef = useRef(false);
@@ -25,7 +23,6 @@ const StraightMarquee = ({
   const dirRef = useRef(direction);
   const velRef = useRef(0);
 
-  // We multiply the array to ensure there's always text visible on screen
   const totalText = useMemo(() => {
     return spacing ? Array(10).fill(text).join('') : text;
   }, [text, spacing]);
@@ -55,7 +52,6 @@ const StraightMarquee = ({
         
         let newOffset = currentOffset + delta;
 
-        // The "Secret Sauce" for the loop: reset when one full length is scrolled
         if (newOffset <= -(spacing * 2)) newOffset += spacing;
         if (newOffset >= 0) newOffset -= spacing;
 
@@ -103,23 +99,33 @@ const StraightMarquee = ({
       onPointerUp={endDrag}
       onPointerLeave={endDrag}
     >
-      <svg className="w-full h-[10vw] block" viewBox="0 0 1440 240">
+      {/* ✅ Responsive + visible height */}
+      <svg className="w-full h-[80px] sm:h-[100px] md:h-[8vw] lg:h-[6vw] block" viewBox="0 0 1440 240">
+        
         <text ref={measureRef} xmlSpace="preserve" className="invisible opacity-0 pointer-events-none">
           {text}
         </text>
+
         <defs>
           <path id={pathId} d={pathD} />
         </defs>
+
         {ready && (
-          <text fontWeight="bold" xmlSpace="preserve" className={className}>
+          <text 
+            fontWeight="bold"
+            fontSize="40"  // 🔥 ensures minimum readable size
+            xmlSpace="preserve" 
+            className={`${className} sm:text-[32px] md:text-[40px] lg:text-[56px]`}
+          >
             <textPath ref={textPathRef} href={`#${pathId}`} startOffset={offset + 'px'}>
               {totalText}
             </textPath>
           </text>
         )}
+
       </svg>
     </div>
   );
 };
 
-export default StraightMarquee;
+export default CurvedLoop;
