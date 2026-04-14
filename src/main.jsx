@@ -5,6 +5,8 @@ import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Provider>
+      <App/>
+    </Provider>
   </StrictMode>,
 )
