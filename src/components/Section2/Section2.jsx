@@ -1,11 +1,14 @@
 import React from 'react'
-import Grid from './Grid'
-
+import Image from './Image'
+import Workstrip from './WorkStrip'
+import  Text from './Text'
+import WorkSection from './WorkSection'
 
 const Section2 = () => {
   return (
-    <div className='min-h-screen w-screen bg-[#0B0F17]'>
-      < Grid />
+    <div className='min-h-screen w-screen'>
+      <WorkSection/>
+
     </div>
   )
 }
