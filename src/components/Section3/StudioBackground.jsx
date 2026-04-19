@@ -41,7 +41,7 @@ const StudioBackground = forwardRef(({ sectionRef }, ref) => {
     <div className="absolute inset-0 z-0 overflow-hidden">
       <img
         ref={bgRef}
-        src="/studio-bg.jpg"
+        src="/studio.png"
         alt=""
         className="w-full h-[130%] object-cover opacity-[0.15]"
         style={{ willChange: 'transform' }}

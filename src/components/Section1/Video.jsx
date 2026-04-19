@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import WebGLScene from './WebGLScene'
 import CurvedLoop from './CurvedLoop'
+import { emitSiteNotice, scrollToSection } from '../../utils/siteEvents'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
@@ -27,12 +28,12 @@ const Video = () => {
   const targetPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    const onMove = (e) => {
+    const onMove = (event) => {
       mouseRef.current = {
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: -((e.clientY / window.innerHeight) * 2 - 1),
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -((event.clientY / window.innerHeight) * 2 - 1),
       }
-      targetPos.current = { x: e.clientX, y: e.clientY }
+      targetPos.current = { x: event.clientX, y: event.clientY }
     }
 
     window.addEventListener('mousemove', onMove)
@@ -123,15 +124,15 @@ const Video = () => {
     return () => ctx.revert()
   }, [])
 
-  const onCtaMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-    gsap.to(e.currentTarget, { x: x * 0.35, y: y * 0.35, duration: 0.4, ease: 'power2.out' })
+  const onCtaMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left - rect.width / 2
+    const y = event.clientY - rect.top - rect.height / 2
+    gsap.to(event.currentTarget, { x: x * 0.35, y: y * 0.35, duration: 0.4, ease: 'power2.out' })
   }
 
-  const onCtaLeave = (e) => {
-    gsap.to(e.currentTarget, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
+  const onCtaLeave = (event) => {
+    gsap.to(event.currentTarget, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
   }
 
   const expandCursor = () => gsap.to(cursorRef.current, { scale: 3.5, opacity: 0.6, duration: 0.3 })
@@ -152,25 +153,18 @@ const Video = () => {
         }
       `}</style>
 
-      {/* custom cursor */}
       <div
         ref={cursorRef}
-        className="fixed top-0 left-0 w-10 h-10 rounded-full pointer-events-none z-[9999]"
+        className="fixed left-0 top-0 z-[9999] h-10 w-10 rounded-full pointer-events-none"
         style={{ border: '1px solid rgba(212,169,106,0.7)', mixBlendMode: 'difference', willChange: 'transform' }}
       />
 
       <div className="h-[300vh]">
-        <section
-          ref={containerRef}
-          className="sticky top-0 h-svh overflow-hidden bg-[#06050a]"
-        >
-
-          {/* webgl */}
+        <section ref={containerRef} className="sticky top-0 h-svh overflow-hidden bg-[#06050a]">
           <div ref={webglRef} className="absolute inset-0 z-0 opacity-0">
             <WebGLScene dissolveRef={dissolveRef} mouseRef={mouseRef} />
           </div>
 
-          {/* video */}
           <video
             ref={videoRef}
             autoPlay
@@ -178,13 +172,12 @@ const Video = () => {
             loop
             playsInline
             src="/hero.mp4"
-            className="absolute inset-0 w-full h-full object-cover z-[1]"
+            className="absolute inset-0 z-[1] h-full w-full object-cover"
             style={{ transformOrigin: 'center center', willChange: 'transform, filter' }}
           />
 
-          {/* colour grade */}
           <div
-            className="absolute inset-0 z-[2] pointer-events-none"
+            className="pointer-events-none absolute inset-0 z-[2]"
             style={{
               background: `
                 radial-gradient(ellipse 70% 60% at 30% 40%, rgba(180,80,20,0.12), transparent 65%),
@@ -194,37 +187,32 @@ const Video = () => {
             }}
           />
 
-          {/* scanlines */}
           <div
-            className="absolute inset-0 z-[3] pointer-events-none"
+            className="pointer-events-none absolute inset-0 z-[3]"
             style={{
               backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 4px)',
               animation: 'scanline 10s linear infinite',
             }}
           />
 
-          {/* top bottom fade */}
           <div
-            className="absolute inset-0 z-[4] pointer-events-none"
+            className="pointer-events-none absolute inset-0 z-[4]"
             style={{ background: 'linear-gradient(to bottom, rgba(6,5,10,0.6) 0%, transparent 22%, transparent 68%, rgba(6,5,10,0.88) 100%)' }}
           />
 
-          {/* content */}
           <div
             ref={contentRef}
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center"
           >
-
-            {/* badge */}
             <div
               ref={badgeRef}
               onMouseEnter={expandCursor}
               onMouseLeave={collapseCursor}
-              className="flex items-center gap-2 mb-8 px-[18px] py-[6px] rounded-full"
+              className="mb-8 flex items-center gap-2 rounded-full px-[18px] py-[6px]"
               style={{ border: '1px solid rgba(212,169,106,0.2)', backdropFilter: 'blur(12px)', background: 'rgba(212,169,106,0.05)' }}
             >
               <span
-                className="w-1.5 h-1.5 rounded-full bg-[#d4a96a]"
+                className="h-1.5 w-1.5 rounded-full bg-[#d4a96a]"
                 style={{ animation: 'dot-breathe 2.6s ease-in-out infinite' }}
               />
               <span
@@ -235,103 +223,100 @@ const Video = () => {
               </span>
             </div>
 
-            {/* title */}
             <h1
-  ref={titleRef}
-  className="
-    text-white leading-none m-0
-    text-7xl md:text-[10rem] lg:text-[148px]
-    tracking-[0.18em] md:tracking-[0.24em]
-    mx-auto text-center
-  "
-  style={{ fontFamily: "'Bebas Neue', sans-serif", perspective: '800px' }}
->
-  <span className="block md:inline">ORION</span>
-  <span className="block md:inline">BLACK</span>
-</h1>
+              ref={titleRef}
+              className="
+                mx-auto text-center text-7xl leading-none text-white
+                tracking-[0.18em] md:text-[10rem] md:tracking-[0.24em] lg:text-[148px]
+              "
+              style={{ fontFamily: "'Bebas Neue', sans-serif", perspective: '800px' }}
+            >
+              <span className="block md:inline">ORION</span>
+              <span className="block md:inline">BLACK</span>
+            </h1>
 
-            {/* divider */}
             <div
               ref={lineRef}
-              className="w-12 h-px my-5"
+              className="my-5 h-px w-12"
               style={{ background: 'linear-gradient(90deg, transparent, rgba(212,169,106,0.7), transparent)' }}
             />
 
-            {/* sub */}
             <p
               ref={subRef}
-              className="text-sm md:text-base tracking-[0.32em] italic font-light m-0 text-white/40"
+              className="m-0 text-sm font-light italic tracking-[0.32em] text-white/40 md:text-base"
               style={{ fontFamily: "'Cormorant Garamond', serif" }}
             >
               Stories Written in Color
             </p>
 
-            {/* cta */}
-            <a
+            <button
+              type="button"
               ref={ctaRef}
-              href="/portfolio"
+              onClick={() => {
+                scrollToSection('#selected-works')
+                emitSiteNotice({
+                  title: 'Selected works below',
+                  message: 'The portfolio stays inside this prototype, so we moved you straight to the showcase section.',
+                })
+              }}
               onMouseMove={onCtaMove}
-              onMouseEnter={(e) => {
+              onMouseEnter={(event) => {
                 expandCursor()
-                e.currentTarget.style.color = '#fff'
-                e.currentTarget.style.borderColor = 'rgba(212,169,106,0.5)'
+                event.currentTarget.style.color = '#fff'
+                event.currentTarget.style.borderColor = 'rgba(212,169,106,0.5)'
               }}
-              onMouseLeave={(e) => {
-                onCtaLeave(e)
+              onMouseLeave={(event) => {
+                onCtaLeave(event)
                 collapseCursor()
-                e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+                event.currentTarget.style.color = 'rgba(255,255,255,0.55)'
+                event.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
               }}
-              className="mt-10 px-10 py-3 rounded-full text-[13px] tracking-[0.22em] uppercase italic no-underline transition-colors duration-300"
+              className="mt-10 rounded-full px-10 py-3 text-[13px] uppercase italic tracking-[0.22em] transition-colors duration-300"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 color: 'rgba(255,255,255,0.55)',
                 border: '1px solid rgba(255,255,255,0.14)',
                 backdropFilter: 'blur(10px)',
+                background: 'transparent',
               }}
             >
               View Portfolio
-            </a>
-
+            </button>
           </div>
 
-          {/* scroll hint */}
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+          <div className="absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
             <span
-              className="text-[9px] tracking-[0.35em] uppercase text-white/20 italic"
+              className="text-[9px] uppercase italic tracking-[0.35em] text-white/20"
               style={{ fontFamily: "'Cormorant Garamond', serif" }}
             >
               scroll
             </span>
             <div
-              className="w-px h-10"
+              className="h-10 w-px"
               style={{ background: 'linear-gradient(to bottom, rgba(212,169,106,0.4), transparent)' }}
             />
           </div>
 
-          {/* corner labels */}
           <span
-            className="absolute top-5 left-6 z-10 text-[10px] tracking-[0.2em] uppercase italic text-white/[0.18]"
+            className="absolute left-6 top-5 z-10 text-[10px] uppercase italic tracking-[0.2em] text-white/[0.18]"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            © 2025
+            (c) 2025
           </span>
           <span
-            className="absolute top-5 right-6 z-10 text-[10px] tracking-[0.2em] uppercase italic text-white/[0.18]"
+            className="absolute right-6 top-5 z-10 text-[10px] uppercase italic tracking-[0.2em] text-white/[0.18]"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
             est. mmxxi
           </span>
 
-          {/* marquee */}
-          <div className="absolute bottom-0 left-0 w-full z-10">
+          <div className="absolute bottom-0 left-0 z-10 w-full">
             <CurvedLoop
-              marqueeText="ORION BLACK • TATTOO • IDENTITY • ART • TRANSFORMATION • "
-              className="w-screen fill-[#E6EDF7] opacity-[0.28] text-[28px] sm:text-[44px] md:text-6xl font-black uppercase italic"
+              marqueeText="ORION BLACK - TATTOO - IDENTITY - ART - TRANSFORMATION - "
+              className="w-screen fill-[#E6EDF7] text-[28px] font-black uppercase italic opacity-[0.28] sm:text-[44px] md:text-6xl"
               speed={1.5}
             />
           </div>
-
         </section>
       </div>
     </>

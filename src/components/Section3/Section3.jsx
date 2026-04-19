@@ -1,126 +1,77 @@
-import { useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useEffect } from 'react'
-import StudioBackground from './StudioBackground'
-import BookingHeadline from './BookingHeadline'
+import { useRef, useState } from 'react'
 import BookingCTA from './BookingCTA'
+import BookingHeadline from './BookingHeadline'
+import BookingModal from './BookingModal'
 import ProcessList from './ProcessList'
-
-gsap.registerPlugin(ScrollTrigger)
-
-const tickerText = 'BROOKLYN — APPOINTMENT ONLY — DM TO BOOK — ORION BLACK — EST. 2021 — '
+import StudioBackground from './StudioBackground'
 
 const Section3 = () => {
   const sectionRef = useRef(null)
-  const bgRef = useRef(null)
-  const dividerRef = useRef(null)
-  const tickerRef = useRef(null)
+  const backgroundRef = useRef(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
+  const handleMouseMove = (event) => {
+    if (!backgroundRef.current) return
 
-      gsap.from(dividerRef.current, {
-        scaleX: 0,
-        transformOrigin: 'left',
-        duration: 1.6,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 92%',
-          toggleActions: 'play none none none',
-        },
-      })
-
-      const tickerWidth = tickerRef.current.scrollWidth / 2
-      gsap.to(tickerRef.current, {
-        x: -tickerWidth,
-        duration: 28,
-        ease: 'none',
-        repeat: -1,
-      })
-
-    }, sectionRef)
-
-    return () => ctx.revert()
-  }, [])
-
-  const onMouseMove = (e) => {
-    const rect = sectionRef.current.getBoundingClientRect()
-    bgRef.current?.onMouseMove(e.clientX - rect.left, e.clientY - rect.top)
+    const bounds = event.currentTarget.getBoundingClientRect()
+    backgroundRef.current.onMouseMove(
+      event.clientX - bounds.left,
+      event.clientY - bounds.top,
+    )
   }
 
-  const onMouseLeave = () => {
-    bgRef.current?.onMouseLeave()
+  const handleMouseLeave = () => {
+    backgroundRef.current?.onMouseLeave()
   }
 
   return (
     <section
       ref={sectionRef}
-      className="relative bg-[#06050a] text-white overflow-hidden"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      className="relative overflow-hidden bg-[#06050a] text-white"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300&display=swap');
+      `}</style>
 
-      {/* amber divider — draws in from S2 */}
+      <StudioBackground ref={backgroundRef} sectionRef={sectionRef} />
+
+      <div className="relative z-10 px-6 pb-20 pt-10 md:px-12 md:pb-24">
+        <div className="flex items-center justify-between gap-6">
+          <span
+            className="text-[10px] tracking-[0.3em] uppercase text-white/25"
+            style={{ fontFamily: "'DM Mono', monospace" }}
+          >
+            Booking Window
+          </span>
+          <span
+            className="text-right text-[10px] tracking-[0.3em] uppercase text-white/25"
+            style={{ fontFamily: "'DM Mono', monospace" }}
+          >
+            By Appointment Only
+          </span>
+        </div>
+
+        <div className="grid min-h-screen grid-cols-1 gap-16 py-16 md:grid-cols-2 md:gap-0 md:py-0">
+          <BookingHeadline />
+
+          <div className="flex flex-col justify-center gap-12">
+            <ProcessList />
+
+            <div className="md:pl-16 lg:pl-24">
+              <BookingCTA onOpen={() => setModalOpen(true)} />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
-        ref={dividerRef}
-        className="h-px mx-6 md:mx-12"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(212,169,106,0.22), transparent)' }}
+        className="relative z-10 mx-6 h-px md:mx-12"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(212,169,106,0.2), transparent)' }}
       />
 
-      {/* studio atmosphere bg */}
-      <StudioBackground ref={bgRef} sectionRef={sectionRef} />
-
-      {/* main content grid */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 min-h-screen px-6 md:px-12 gap-16 md:gap-0 py-28 md:py-0">
-
-        {/* left */}
-        <div className="flex flex-col justify-center gap-10">
-          <BookingHeadline />
-          <BookingCTA />
-        </div>
-
-        {/* right */}
-        <ProcessList />
-
-      </div>
-
-      {/* bottom ticker */}
-      <div className="relative z-10 border-t border-white/[0.04] py-4 overflow-hidden">
-        <div
-          ref={tickerRef}
-          className="flex whitespace-nowrap"
-          style={{ width: 'max-content' }}
-        >
-          {[...Array(5)].map((_, i) => (
-            <span
-              key={i}
-              className="text-[10px] tracking-[0.4em] uppercase text-white/18 pr-8"
-              style={{ fontFamily: "'DM Mono', monospace" }}
-            >
-              {tickerText}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* footer */}
-      <div className="relative z-10 px-6 md:px-12 pb-10 flex items-center justify-between">
-        <span
-          className="text-[9px] tracking-[0.2em] uppercase text-white/12 italic"
-          style={{ fontFamily: "'Cormorant Garamond', serif" }}
-        >
-          Orion Black © 2025
-        </span>
-        <span
-          className="text-[9px] tracking-[0.2em] uppercase text-white/12"
-          style={{ fontFamily: "'DM Mono', monospace" }}
-        >
-          Brooklyn, NY
-        </span>
-      </div>
-
+      {modalOpen && <BookingModal onClose={() => setModalOpen(false)} />}
     </section>
   )
 }

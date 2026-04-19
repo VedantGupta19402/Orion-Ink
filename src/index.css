@@ -1,7 +1,28 @@
 @import "tailwindcss";
+
 *{
   box-sizing: border-box;
 }
-.tatoo{
-  filter: brightness(-10px);
+
+::-webkit-scrollbar {
+  width: 10px; 
+}
+
+::-webkit-scrollbar:horizontal {
+  display: none; 
+}
+
+::-webkit-scrollbar-track {
+  background: #040308;
+  border-left: 1px solid rgba(212, 169, 106, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4a96a;
+  border-radius: 8px;
+  border: 3px solid #040308; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e5bd80;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { emitSiteNotice, scrollToSection } from '../../utils/siteEvents'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -11,7 +12,7 @@ const works = [
     category: 'Japanese Traditional',
     year: '2024',
     duration: '18h',
-    image: '\work1.png',
+    image: '/work1.png',
   },
   {
     id: '02',
@@ -19,7 +20,7 @@ const works = [
     category: 'Blackwork / Botanical',
     year: '2024',
     duration: '24h',
-    image: '\work2.png',
+    image: '/work2.png',
   },
   {
     id: '03',
@@ -27,7 +28,7 @@ const works = [
     category: 'Neo-Traditional',
     year: '2023',
     duration: '32h',
-    image: '\work3.png',
+    image: '/work3.png',
   },
 ]
 
@@ -37,14 +38,14 @@ const WorkStrip = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      cardsRef.current.forEach((element, index) => {
+        if (!element) return
 
-      cardsRef.current.forEach((el, i) => {
-        if (!el) return
-        gsap.from(el, {
+        gsap.from(element, {
           opacity: 0,
           y: 60,
           duration: 1,
-          delay: i * 0.12,
+          delay: index * 0.12,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: stripRef.current,
@@ -54,61 +55,70 @@ const WorkStrip = () => {
         })
       })
 
-      gsap.to(stripRef.current, {
-        x: () => -(stripRef.current.scrollWidth - window.innerWidth + 96),
-        ease: 'none',
-        scrollTrigger: {
-          trigger: stripRef.current,
-          start: 'top 60%',
-          end: () => `+=${stripRef.current.scrollWidth}`,
-          scrub: 1.2,
-        },
-      })
-
+      if (window.innerWidth >= 1024) {
+        gsap.to(stripRef.current, {
+          x: () => -(stripRef.current.scrollWidth - window.innerWidth + 96),
+          ease: 'none',
+          scrollTrigger: {
+            trigger: stripRef.current,
+            start: 'top 60%',
+            end: () => `+=${stripRef.current.scrollWidth}`,
+            scrub: 1.2,
+          },
+        })
+      }
     })
 
     return () => ctx.revert()
   }, [])
 
   return (
-    <div className="relative mt-10 md:mt-0 pb-24">
-
-      <div className="px-6 md:px-12 mb-8 flex items-center justify-between">
+    <div className="relative mt-10 pb-24 md:mt-0">
+      <div className="mb-8 flex items-center justify-between px-6 md:px-12">
         <span
           className="text-[10px] tracking-[0.3em] uppercase text-white/25"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
           Recent work
         </span>
-        <a
-          href="/portfolio"
-          className="text-[10px] tracking-[0.25em] uppercase text-[#d4a96a]/60 hover:text-[#d4a96a] transition-colors duration-300 no-underline"
+        <button
+          type="button"
+          onClick={() => {
+            scrollToSection('#selected-works')
+            emitSiteNotice({
+              title: 'Portfolio Preview',
+              message: 'This frontend demo keeps the gallery on-page, so you can explore the selected works right here.',
+            })
+          }}
+          className="text-[10px] tracking-[0.25em] uppercase text-[#d4a96a]/60 transition-colors duration-300 hover:text-[#d4a96a]"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
-          View all →
-        </a>
+          View all {'->'}
+        </button>
       </div>
 
       <div
         ref={stripRef}
-        className="flex gap-5 px-6 md:px-12"
-        style={{ width: 'max-content' }}
+        className="flex flex-col gap-5 px-6 md:px-12 lg:flex-row"
+        style={{ width: '100%' }}
       >
-        {works.map((work, i) => (
+        {works.map((work, index) => (
           <div
             key={work.id}
-            ref={(el) => (cardsRef.current[i] = el)}
-            className="group relative flex-shrink-0 w-[75vw] sm:w-[50vw] md:w-[36vw] lg:w-[28vw]"
+            ref={(element) => {
+              cardsRef.current[index] = element
+            }}
+            className="group relative w-full flex-shrink-0 sm:w-full md:w-full lg:w-[28vw]"
             style={{ cursor: 'none' }}
           >
-            <div className="relative w-full aspect-[3/4] overflow-hidden">
+            <div className="relative aspect-[3/4] w-full overflow-hidden">
               <img
                 src={work.image}
                 alt={work.title}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 style={{ background: 'linear-gradient(to top, rgba(4,3,8,0.8), transparent 50%)' }}
               />
             </div>
@@ -119,16 +129,16 @@ const WorkStrip = () => {
                   className="text-[10px] tracking-[0.25em] uppercase text-white/30"
                   style={{ fontFamily: "'DM Mono', monospace" }}
                 >
-                  {work.id} — {work.category}
+                  {work.id} - {work.category}
                 </span>
                 <h3
-                  className="text-xl md:text-2xl text-white/85 m-0"
+                  className="m-0 text-xl text-white/85 md:text-2xl"
                   style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 300 }}
                 >
                   {work.title}
                 </h3>
               </div>
-              <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
+              <div className="ml-4 flex shrink-0 flex-col items-end gap-1">
                 <span
                   className="text-[9px] tracking-[0.2em] uppercase text-white/20"
                   style={{ fontFamily: "'DM Mono', monospace" }}
@@ -145,13 +155,12 @@ const WorkStrip = () => {
             </div>
 
             <div
-              className="mt-3 h-px w-0 group-hover:w-full transition-all duration-500 ease-out"
+              className="mt-3 h-px w-0 transition-all duration-500 ease-out group-hover:w-full"
               style={{ background: 'linear-gradient(90deg, #d4a96a, transparent)' }}
             />
           </div>
         ))}
       </div>
-
     </div>
   )
 }

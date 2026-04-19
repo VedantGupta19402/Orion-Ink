@@ -17,8 +17,6 @@ const WorkSection = () => {
   const sectionRef = useRef(null)
   const counterRef = useRef(null)
 
-  // counter scrub lives here because it needs sectionRef + counterRef together
-  // and counterRef is rendered inside FeaturedImage
   const initCounter = () => {
     ScrollTrigger.create({
       trigger: sectionRef.current,
@@ -34,14 +32,12 @@ const WorkSection = () => {
   }
 
   return (
-    <section ref={sectionRef} className="relative bg-[#0c0b0f] text-white">
-
+    <section id="selected-works" ref={sectionRef} className="relative bg-[#0c0b0f] text-white">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300&display=swap');
       `}</style>
 
-      {/* top label bar */}
-      <div className="flex items-center justify-between px-6 md:px-12 pt-10">
+      <div className="flex items-center justify-between px-6 pt-10 md:px-12">
         <span
           className="text-[10px] tracking-[0.3em] uppercase text-white/25"
           style={{ fontFamily: "'DM Mono', monospace" }}
@@ -52,24 +48,21 @@ const WorkSection = () => {
           className="text-[10px] tracking-[0.3em] uppercase text-white/25"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
-          Brooklyn, NY — Est. 2021
+          Brooklyn, NY - Est. 2021
         </span>
       </div>
 
-      {/* split layout */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 min-h-screen px-6 md:px-12 gap-12 md:gap-0 py-20 md:py-0">
+      <div className="relative grid min-h-screen grid-cols-1 gap-12 px-6 py-20 md:grid-cols-2 md:gap-0 md:px-12 md:py-0">
         <Image sectionRef={sectionRef} counterRef={counterRef} onReady={initCounter} />
         <Text />
       </div>
 
       <WorkStrip />
 
-      {/* bottom divider */}
       <div
-        className="h-px mx-6 md:mx-12"
+        className="mx-6 h-px md:mx-12"
         style={{ background: 'linear-gradient(90deg, transparent, rgba(212,169,106,0.2), transparent)' }}
       />
-
     </section>
   )
 }
