@@ -11,23 +11,23 @@ const works = [
     category: 'Japanese Traditional',
     year: '2024',
     duration: '18h',
-    image: '/work-01.jpg',
+    image: '\work1.png',
   },
   {
     id: '02',
-    title: 'Void Garden',
+    title: 'Moth & Mercury',
     category: 'Blackwork / Botanical',
     year: '2024',
     duration: '24h',
-    image: '/work-02.jpg',
+    image: '\work2.png',
   },
   {
     id: '03',
-    title: 'The Becoming',
+    title: 'Red Thread',
     category: 'Neo-Traditional',
     year: '2023',
     duration: '32h',
-    image: '/work-03.jpg',
+    image: '\work3.png',
   },
 ]
 

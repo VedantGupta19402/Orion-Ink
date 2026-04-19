@@ -79,9 +79,9 @@ const Image = ({ sectionRef, counterRef }) => {
           style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         >
           <img
-            src="/featured.jpg"
+            src="\featured.png"
             alt="Featured tattoo work"
-            className="w-full h-full object-cover"
+            className="w-full h-[90%] pt-16 object-cover"
           />
 
           <div
