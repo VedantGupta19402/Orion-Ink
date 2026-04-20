@@ -155,7 +155,7 @@ const Video = () => {
 
       <div
         ref={cursorRef}
-        className="fixed left-0 top-0 z-[9999] h-10 w-10 rounded-full pointer-events-none"
+        className="fixed left-0 top-0 z-[999999] h-10 w-10 rounded-full pointer-events-none"
         style={{ border: '1px solid rgba(212,169,106,0.7)', mixBlendMode: 'difference', willChange: 'transform' }}
       />
 

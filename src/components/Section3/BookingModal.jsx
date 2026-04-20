@@ -81,7 +81,7 @@ const BookingModal = ({ onClose }) => {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[99999] flex items-end justify-center p-4 md:items-center md:p-0 bg-[#040308]/90 backdrop-blur-md"
+      className="fixed inset-0 z-[99999] flex items-end justify-center p-4 md:items-center md:p-0 bg-[#06050a]/40 backdrop-blur-xl"
       onClick={(event) => event.target === overlayRef.current && close()}
     >
       <div
