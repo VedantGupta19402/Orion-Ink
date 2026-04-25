@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { emitSiteNotice } from '../../utils/siteEvents'
+import { emitSiteNotice } from '../../pages/utils/siteEvents'
 
 gsap.registerPlugin(ScrollTrigger)
 

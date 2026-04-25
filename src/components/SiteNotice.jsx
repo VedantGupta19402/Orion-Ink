@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { SITE_NOTICE_EVENT } from '../utils/siteEvents'
+import { SITE_NOTICE_EVENT } from '../pages/utils/siteEvents'
 
 const SiteNotice = () => {
   const noticeRef = useRef(null)

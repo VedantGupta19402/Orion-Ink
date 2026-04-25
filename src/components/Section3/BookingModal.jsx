@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { emitSiteNotice } from '../../utils/siteEvents'
+import { emitSiteNotice } from '../../pages/utils/siteEvents'
 
 const times = [
   '10:00 AM', '11:00 AM', '12:00 PM',

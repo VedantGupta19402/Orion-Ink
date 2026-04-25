@@ -116,7 +116,6 @@ const Footer = () => {
             Follow
           </span>
           <a
-            href="https://instagram.com/orionblack"
             data-cursor="open"
             className="text-[10px] tracking-[0.22em] uppercase text-white/28 hover:text-[#d4a96a]/55 transition-colors duration-300 no-underline"
             style={{ fontFamily: "'DM Mono', monospace" }}
@@ -124,7 +123,6 @@ const Footer = () => {
             Instagram
           </a>
           <a
-            href="https://tiktok.com/@orionblack"
             data-cursor="open"
             className="text-[10px] tracking-[0.22em] uppercase text-white/28 hover:text-[#d4a96a]/55 transition-colors duration-300 no-underline"
             style={{ fontFamily: "'DM Mono', monospace" }}

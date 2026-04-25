@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import WebGLScene from './WebGLScene'
 import CurvedLoop from './CurvedLoop'
-import { emitSiteNotice, scrollToSection } from '../../utils/siteEvents'
+import { emitSiteNotice, scrollToSection } from '../../pages/utils/siteEvents'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
