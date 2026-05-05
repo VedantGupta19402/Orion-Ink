@@ -171,7 +171,7 @@ const Video = () => {
             muted
             loop
             playsInline
-            src="/hero.mp4"
+            src="\Ink.mp4"
             className="absolute inset-0 z-[1] h-full w-full object-cover"
             style={{ transformOrigin: 'center center', willChange: 'transform, filter' }}
           />
