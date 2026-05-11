@@ -1,5 +1,6 @@
-import { useRef } from 'react'
+import { memo, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { usePerformanceProfile } from '../../lib/performance'
 
 const vertexShader = `
   varying vec2 vUv;
@@ -128,34 +129,29 @@ const fragmentShader = `
   }
 `
 
-const FluidMesh = ({ dissolveRef, mouseRef }) => {
+const FluidMesh = memo(({ active, dissolveRef, mouseRef, segments }) => {
   const matRef = useRef()
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uDissolve: { value: 0 },
+    uMouse: { value: { x: 0, y: 0 } },
+  }), [])
 
   useFrame(({ clock }) => {
-    if (!matRef?.current?.uniforms) return
-    
+    if (!active || !matRef.current?.uniforms) return
+
     matRef.current.uniforms.uTime.value = clock.elapsedTime
-    
-    if (dissolveRef?.current !== undefined) {
-      matRef.current.uniforms.uDissolve.value = dissolveRef.current
-    }
-    
-    if (mouseRef?.current) {
-      matRef.current.uniforms.uMouse.value.x = mouseRef.current.x || 0
-      matRef.current.uniforms.uMouse.value.y = mouseRef.current.y || 0
-    }
+    matRef.current.uniforms.uDissolve.value = dissolveRef?.current ?? 0
+    matRef.current.uniforms.uMouse.value.x = mouseRef?.current?.x ?? 0
+    matRef.current.uniforms.uMouse.value.y = mouseRef?.current?.y ?? 0
   })
 
   return (
     <mesh rotation={[-0.12, 0, 0]}>
-      <planeGeometry args={[5, 5, 256, 256]} />
+      <planeGeometry args={[5, 5, segments, segments]} />
       <shaderMaterial
         ref={matRef}
-        uniforms={{
-          uTime: { value: 0 },
-          uDissolve: { value: 0 },
-          uMouse: { value: { x: 0, y: 0 } },
-        }}
+        uniforms={uniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         transparent
@@ -163,19 +159,35 @@ const FluidMesh = ({ dissolveRef, mouseRef }) => {
       />
     </mesh>
   )
-}
+})
 
-const WebGLScene = ({ dissolveRef, mouseRef }) => {
+const WebGLScene = ({ dissolveRef, mouseRef, active }) => {
+  const profile = usePerformanceProfile()
+
   return (
     <Canvas
       camera={{ position: [0, 0, 2.4], fov: 55 }}
-      dpr={[1, 2]}
-      gl={{ antialias: false, alpha: true }}
-      className="!absolute inset-0 w-full h-full"
+      dpr={profile.webglDpr}
+      frameloop={active ? 'always' : 'never'}
+      resize={{ debounce: { resize: 120, scroll: 0 }, scroll: false }}
+      gl={{
+        antialias: false,
+        alpha: true,
+        powerPreference: profile.isLowEnd ? 'low-power' : 'high-performance',
+        precision: profile.isLowEnd ? 'mediump' : 'highp',
+        stencil: false,
+        depth: false,
+      }}
+      className="!absolute inset-0 h-full w-full"
     >
-      <FluidMesh dissolveRef={dissolveRef} mouseRef={mouseRef} />
+      <FluidMesh
+        dissolveRef={dissolveRef}
+        mouseRef={mouseRef}
+        active={active}
+        segments={profile.webglSegments}
+      />
     </Canvas>
   )
 }
 
-export default WebGLScene
+export default memo(WebGLScene)

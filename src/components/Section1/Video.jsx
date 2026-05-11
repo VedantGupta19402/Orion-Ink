@@ -1,12 +1,11 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
-import WebGLScene from './WebGLScene'
+import { Suspense, memo, startTransition, useCallback, useEffect, useRef, useState } from 'react'
 import CurvedLoop from './CurvedLoop'
 import { emitSiteNotice, scrollToSection } from '../../pages/utils/siteEvents'
+import { gsap, SplitText } from '../../lib/gsap'
+import { lazyWithPreload, usePerformanceProfile } from '../../lib/performance'
+import { useIsVisible } from '../../lib/gsap'
 
-gsap.registerPlugin(ScrollTrigger, SplitText)
+const WebGLScene = lazyWithPreload(() => import('./WebGLScene'))
 
 const lerp = (a, b, t) => a + (b - a) * t
 
@@ -21,39 +20,72 @@ const Video = () => {
   const ctaRef = useRef(null)
   const cursorRef = useRef(null)
   const lineRef = useRef(null)
+  const ctaXToRef = useRef(null)
+  const ctaYToRef = useRef(null)
+  const hasRequestedWebGLRef = useRef(false)
 
   const dissolveRef = useRef(0)
   const mouseRef = useRef({ x: 0, y: 0 })
   const cursorPos = useRef({ x: 0, y: 0 })
   const targetPos = useRef({ x: 0, y: 0 })
+  const [shouldLoadWebGL, setShouldLoadWebGL] = useState(false)
+
+  const profile = usePerformanceProfile()
+  const isHeroVisible = useIsVisible(containerRef, {
+    rootMargin: '300px 0px',
+    threshold: 0.15,
+    initial: true,
+  })
 
   useEffect(() => {
+    if (!profile.cursorEnabled) return undefined
+
     const onMove = (event) => {
       mouseRef.current = {
         x: (event.clientX / window.innerWidth) * 2 - 1,
         y: -((event.clientY / window.innerHeight) * 2 - 1),
       }
+
       targetPos.current = { x: event.clientX, y: event.clientY }
     }
 
-    window.addEventListener('mousemove', onMove)
+    window.addEventListener('pointermove', onMove, { passive: true })
 
-    let raf
+    let raf = 0
     const tick = () => {
       cursorPos.current.x = lerp(cursorPos.current.x, targetPos.current.x, 0.08)
       cursorPos.current.y = lerp(cursorPos.current.y, targetPos.current.y, 0.08)
-      if (cursorRef.current) {
+
+      if (cursorRef.current && isHeroVisible) {
         cursorRef.current.style.transform = `translate(${cursorPos.current.x - 20}px, ${cursorPos.current.y - 20}px)`
       }
+
       raf = requestAnimationFrame(tick)
     }
-    tick()
+
+    raf = requestAnimationFrame(tick)
 
     return () => {
-      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('pointermove', onMove)
       cancelAnimationFrame(raf)
     }
-  }, [])
+  }, [isHeroVisible, profile.cursorEnabled])
+
+  useEffect(() => {
+    if (!profile.hoverFxEnabled || !ctaRef.current) return undefined
+
+    ctaXToRef.current = gsap.quickTo(ctaRef.current, 'x', {
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+
+    ctaYToRef.current = gsap.quickTo(ctaRef.current, 'y', {
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+
+    return undefined
+  }, [profile.hoverFxEnabled])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -107,8 +139,16 @@ const Video = () => {
           end: '+=200%',
           scrub: 1.4,
           pin: true,
+          anticipatePin: 1,
+          fastScrollEnd: true,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             dissolveRef.current = Math.max(0, (self.progress - 0.6) / 0.35)
+
+            if (!hasRequestedWebGLRef.current && self.progress >= 0.52) {
+              hasRequestedWebGLRef.current = true
+              startTransition(() => setShouldLoadWebGL(true))
+            }
           },
         },
       })
@@ -119,50 +159,63 @@ const Video = () => {
       tl.to(video, { scale: 1.3, filter: 'contrast(1.6) saturate(0.4) brightness(0.3)', ease: 'none' }, 0.6)
       tl.to(video, { opacity: 0, ease: 'none' }, 0.82)
       tl.to(webgl, { opacity: 1, ease: 'none' }, 0.84)
+
+      return () => split.revert()
     }, containerRef)
 
     return () => ctx.revert()
   }, [])
 
-  const onCtaMove = (event) => {
+  const onCtaMove = useCallback((event) => {
+    if (!profile.hoverFxEnabled || !ctaXToRef.current || !ctaYToRef.current) return
+
     const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left - rect.width / 2
     const y = event.clientY - rect.top - rect.height / 2
-    gsap.to(event.currentTarget, { x: x * 0.35, y: y * 0.35, duration: 0.4, ease: 'power2.out' })
-  }
+    ctaXToRef.current(x * 0.35)
+    ctaYToRef.current(y * 0.35)
+  }, [profile.hoverFxEnabled])
 
-  const onCtaLeave = (event) => {
-    gsap.to(event.currentTarget, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
-  }
+  const onCtaLeave = useCallback(() => {
+    if (!profile.hoverFxEnabled || !ctaXToRef.current || !ctaYToRef.current) return
 
-  const expandCursor = () => gsap.to(cursorRef.current, { scale: 3.5, opacity: 0.6, duration: 0.3 })
-  const collapseCursor = () => gsap.to(cursorRef.current, { scale: 1, opacity: 1, duration: 0.3 })
+    ctaXToRef.current(0)
+    ctaYToRef.current(0)
+    gsap.to(ctaRef.current, { duration: 0.6, ease: 'elastic.out(1, 0.5)', x: 0, y: 0 })
+  }, [profile.hoverFxEnabled])
+
+  const expandCursor = useCallback(() => {
+    if (!profile.cursorEnabled || !cursorRef.current) return
+    gsap.to(cursorRef.current, { scale: 3.5, opacity: 0.6, duration: 0.3 })
+  }, [profile.cursorEnabled])
+
+  const collapseCursor = useCallback(() => {
+    if (!profile.cursorEnabled || !cursorRef.current) return
+    gsap.to(cursorRef.current, { scale: 1, opacity: 1, duration: 0.3 })
+  }, [profile.cursorEnabled])
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap');
-        * { cursor: none !important; }
-        @keyframes scanline {
-          from { transform: translateY(0); }
-          to { transform: translateY(200px); }
-        }
-        @keyframes dot-breathe {
-          0%, 100% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.7); opacity: 1; }
-        }
-      `}</style>
-
-      <div
-        ref={cursorRef}
-        className="fixed left-0 top-0 z-[999999] h-10 w-10 rounded-full pointer-events-none"
-        style={{ border: '1px solid rgba(212,169,106,0.7)', mixBlendMode: 'difference', willChange: 'transform' }}
-      />
+      {profile.cursorEnabled && (
+        <div
+          ref={cursorRef}
+          className="pointer-events-none fixed left-0 top-0 z-[999999] h-10 w-10 rounded-full"
+          style={{ border: '1px solid rgba(212,169,106,0.7)', mixBlendMode: 'difference', willChange: 'transform' }}
+        />
+      )}
 
       <div className="h-[300vh]">
-        <section ref={containerRef} className="sticky top-0 h-svh overflow-hidden bg-[#06050a]">
+        <section
+          ref={containerRef}
+          className="sticky top-0 h-svh overflow-hidden bg-[#06050a]"
+          style={{ cursor: profile.cursorEnabled ? 'none' : 'auto' }}
+        >
           <div ref={webglRef} className="absolute inset-0 z-0 opacity-0">
-            <WebGLScene dissolveRef={dissolveRef} mouseRef={mouseRef} />
+            {isHeroVisible && shouldLoadWebGL && (
+              <Suspense fallback={null}>
+                <WebGLScene dissolveRef={dissolveRef} mouseRef={mouseRef} active={isHeroVisible} />
+              </Suspense>
+            )}
           </div>
 
           <video
@@ -171,7 +224,9 @@ const Video = () => {
             muted
             loop
             playsInline
-            src="\Ink.mp4"
+            preload="auto"
+            fetchPriority="high"
+            src="/Ink.mp4"
             className="absolute inset-0 z-[1] h-full w-full object-cover"
             style={{ transformOrigin: 'center center', willChange: 'transform, filter' }}
           />
@@ -266,7 +321,7 @@ const Video = () => {
                 event.currentTarget.style.borderColor = 'rgba(212,169,106,0.5)'
               }}
               onMouseLeave={(event) => {
-                onCtaLeave(event)
+                onCtaLeave()
                 collapseCursor()
                 event.currentTarget.style.color = 'rgba(255,255,255,0.55)'
                 event.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
@@ -323,4 +378,4 @@ const Video = () => {
   )
 }
 
-export default Video
+export default memo(Video)

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
 import { emitSiteNotice } from '../../pages/utils/siteEvents'
+import { gsap } from '../../lib/gsap'
 
 const times = [
   '10:00 AM', '11:00 AM', '12:00 PM',
@@ -19,19 +19,19 @@ const BookingModal = ({ onClose }) => {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    let ctx = gsap.context(() => {
+    const ctx = gsap.context(() => {
       gsap.fromTo(
         overlayRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.4, ease: 'power2.out' }
+        { opacity: 1, duration: 0.4, ease: 'power2.out' },
       )
       gsap.fromTo(
         panelRef.current,
         { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power4.out' }
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power4.out' },
       )
     })
-    
+
     return () => ctx.revert()
   }, [])
 
@@ -75,18 +75,18 @@ const BookingModal = ({ onClose }) => {
   `
 
   const labelClass = `
-    text-[9px] tracking-[0.28em] uppercase text-white/25 mb-1 block
+    mb-1 block text-[9px] uppercase tracking-[0.28em] text-white/25
   `
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[99999] flex items-end justify-center p-4 md:items-center md:p-0 bg-[#06050a]/40 backdrop-blur-xl"
+      className="fixed inset-0 z-[99999] flex items-end justify-center bg-[#06050a]/40 p-4 backdrop-blur-xl md:items-center md:p-0"
       onClick={(event) => event.target === overlayRef.current && close()}
     >
       <div
         ref={panelRef}
-        className="relative w-full max-w-md overflow-hidden bg-[#0c0b0f] border border-[#d4a96a]/10"
+        className="relative w-full max-w-md overflow-hidden border border-[#d4a96a]/10 bg-[#0c0b0f]"
       >
         <div className="flex items-center justify-between border-b border-white/5 px-8 py-5">
           <span
@@ -98,7 +98,7 @@ const BookingModal = ({ onClose }) => {
           <button
             type="button"
             onClick={close}
-            className="text-lg leading-none text-white/20 transition-colors duration-200 hover:text-white/60 bg-transparent border-none appearance-none"
+            className="appearance-none border-none bg-transparent text-lg leading-none text-white/20 transition-colors duration-200 hover:text-white/60"
             aria-label="Close booking form"
           >
             x
@@ -142,9 +142,9 @@ const BookingModal = ({ onClose }) => {
             </span>
           )}
 
-          <div className="flex flex-col gap-4 border-t border-white/5 pt-6 mt-2 md:flex-row md:items-center md:justify-between">
+          <div className="mt-2 flex flex-col gap-4 border-t border-white/5 pt-6 md:flex-row md:items-center md:justify-between">
             <span
-              className="text-[9px] uppercase tracking-[0.2em] text-white/20 text-center md:text-left"
+              className="text-center text-[9px] uppercase tracking-[0.2em] text-white/20 md:text-left"
               style={{ fontFamily: "'DM Mono', monospace" }}
             >
               Select time to confirm
@@ -152,7 +152,7 @@ const BookingModal = ({ onClose }) => {
             <button
               type="button"
               onClick={onSubmit}
-              className="px-8 py-3 text-[10px] uppercase tracking-[0.28em] transition-all duration-300 border border-[#d4a96a]/25 text-white/50 bg-transparent hover:bg-[#d4a96a]/5 hover:border-[#d4a96a]/50 hover:text-[#d4a96a]"
+              className="border border-[#d4a96a]/25 bg-transparent px-8 py-3 text-[10px] uppercase tracking-[0.28em] text-white/50 transition-all duration-300 hover:border-[#d4a96a]/50 hover:bg-[#d4a96a]/5 hover:text-[#d4a96a]"
               style={{ fontFamily: "'DM Mono', monospace" }}
             >
               Done

@@ -1,27 +1,49 @@
-import { useRef } from 'react'
-import gsap from 'gsap'
+import { memo, useEffect, useRef } from 'react'
+import { gsap } from '../../lib/gsap'
+import { usePerformanceProfile } from '../../lib/performance'
 
 const BookingCTA = ({ onOpen }) => {
   const ctaRef = useRef(null)
+  const xToRef = useRef(null)
+  const yToRef = useRef(null)
+  const profile = usePerformanceProfile()
+
+  useEffect(() => {
+    if (!profile.hoverFxEnabled || !ctaRef.current) return undefined
+
+    xToRef.current = gsap.quickTo(ctaRef.current, 'x', {
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+    yToRef.current = gsap.quickTo(ctaRef.current, 'y', {
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+
+    return undefined
+  }, [profile.hoverFxEnabled])
 
   const onMouseMove = (event) => {
+    if (!profile.hoverFxEnabled || !xToRef.current || !yToRef.current) return
+
     const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left - rect.width / 2
     const y = event.clientY - rect.top - rect.height / 2
 
-    gsap.to(ctaRef.current, {
-      x: x * 0.38,
-      y: y * 0.38,
-      duration: 0.4,
-      ease: 'power2.out',
-    })
+    xToRef.current(x * 0.38)
+    yToRef.current(y * 0.38)
   }
 
   const onMouseEnter = () => {
+    if (!profile.hoverFxEnabled) return
     gsap.to(ctaRef.current, { scale: 1.04, duration: 0.3, ease: 'power2.out' })
   }
 
   const onMouseLeave = () => {
+    if (!profile.hoverFxEnabled) return
+
+    xToRef.current?.(0)
+    yToRef.current?.(0)
     gsap.to(ctaRef.current, {
       x: 0,
       y: 0,
@@ -39,7 +61,7 @@ const BookingCTA = ({ onOpen }) => {
         onMouseMove={onMouseMove}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        className="rounded-full px-10 py-4 text-[11px] tracking-[0.3em] uppercase transition-all duration-300 bg-transparent border border-white/10 text-white/45 backdrop-blur-[14px] hover:bg-[#d4a96a]/10 hover:border-[#d4a96a]/45 hover:text-[#d4a96a]"
+        className="rounded-full border border-white/10 bg-transparent px-10 py-4 text-[11px] uppercase tracking-[0.3em] text-white/45 transition-all duration-300 hover:border-[#d4a96a]/45 hover:bg-[#d4a96a]/10 hover:text-[#d4a96a] backdrop-blur-[14px]"
         style={{ fontFamily: "'DM Mono', monospace" }}
       >
         Request a session
@@ -48,4 +70,4 @@ const BookingCTA = ({ onOpen }) => {
   )
 }
 
-export default BookingCTA
+export default memo(BookingCTA)

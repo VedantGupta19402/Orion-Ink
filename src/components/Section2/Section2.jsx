@@ -1,16 +1,12 @@
-import React from 'react'
-import Image from './Image'
-import Workstrip from './WorkStrip'
-import  Text from './Text'
+import { memo } from 'react'
 import WorkSection from './WorkSection'
 
 const Section2 = () => {
   return (
-    <div className='min-h-screen w-screen'>
-      <WorkSection/>
-
+    <div className="min-h-screen w-screen">
+      <WorkSection />
     </div>
   )
 }
 
-export default Section2
+export default memo(Section2)

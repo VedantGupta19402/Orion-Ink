@@ -1,9 +1,7 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { memo, useEffect, useRef } from 'react'
 import { emitSiteNotice } from '../../pages/utils/siteEvents'
-
-gsap.registerPlugin(ScrollTrigger)
+import { gsap } from '../../lib/gsap'
+import { usePerformanceProfile } from '../../lib/performance'
 
 const steps = [
   { id: '01', label: 'Consultation', detail: 'Vision + placement' },
@@ -15,6 +13,7 @@ const steps = [
 const ProcessList = () => {
   const stepsRef = useRef([])
   const dashesRef = useRef([])
+  const profile = usePerformanceProfile()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -29,7 +28,7 @@ const ProcessList = () => {
           scrollTrigger: {
             trigger: element,
             start: 'top 87%',
-            toggleActions: 'play none none none',
+            once: true,
           },
         })
       })
@@ -39,6 +38,8 @@ const ProcessList = () => {
   }, [])
 
   const onStepEnter = (index) => {
+    if (!profile.hoverFxEnabled) return
+
     gsap.to(dashesRef.current[index], {
       width: 48,
       duration: 0.4,
@@ -52,6 +53,8 @@ const ProcessList = () => {
   }
 
   const onStepLeave = (index) => {
+    if (!profile.hoverFxEnabled) return
+
     gsap.to(dashesRef.current[index], {
       width: 24,
       duration: 0.5,
@@ -80,7 +83,7 @@ const ProcessList = () => {
             stepsRef.current[index] = element
           }}
           className="flex items-start gap-6 border-b border-white/[0.05] py-6"
-          style={{ clipPath: 'inset(0 0 0 0)', cursor: 'none' }}
+          style={{ clipPath: 'inset(0 0 0 0)', cursor: profile.hoverFxEnabled ? 'none' : 'auto' }}
           onMouseEnter={() => onStepEnter(index)}
           onMouseLeave={() => onStepLeave(index)}
         >
@@ -142,7 +145,7 @@ const ProcessList = () => {
           }
         }}
         className="group mt-8 flex w-fit items-center gap-3"
-        style={{ cursor: 'none' }}
+        style={{ cursor: profile.hoverFxEnabled ? 'none' : 'auto' }}
       >
         <span
           className="text-[9px] uppercase tracking-[0.28em] text-white/22 transition-colors duration-300 group-hover:text-[#d4a96a]/55"
@@ -159,4 +162,4 @@ const ProcessList = () => {
   )
 }
 
-export default ProcessList
+export default memo(ProcessList)

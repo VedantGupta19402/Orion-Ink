@@ -1,14 +1,11 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { memo, useEffect, useRef } from 'react'
 import Clock from './Clock'
-
-gsap.registerPlugin(ScrollTrigger)
+import { gsap } from '../../lib/gsap'
 
 const navLinks = [
-  { label: 'Work',    id: 'work'    },
-  { label: 'Process', id: 'process' },
-  { label: 'Book',    id: 'book'    },
+  { label: 'Work', id: 'selected-works' },
+  { label: 'Book', id: 'book' },
+  { label: 'Archive', id: 'archive' },
 ]
 
 const Footer = () => {
@@ -17,7 +14,6 @@ const Footer = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-
       gsap.from(lineRef.current, {
         scaleX: 0,
         transformOrigin: 'left',
@@ -26,7 +22,7 @@ const Footer = () => {
         scrollTrigger: {
           trigger: footerRef.current,
           start: 'top 90%',
-          toggleActions: 'play none none none',
+          once: true,
         },
       })
 
@@ -39,34 +35,29 @@ const Footer = () => {
         scrollTrigger: {
           trigger: footerRef.current,
           start: 'top 88%',
-          toggleActions: 'play none none none',
+          once: true,
         },
       })
-
     }, footerRef)
 
     return () => ctx.revert()
   }, [])
 
   const scrollTo = (id) => {
-    const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+    const element = document.getElementById(id)
+    element?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
     <footer ref={footerRef} className="relative z-10">
-
-      {/* amber divider */}
       <div
         ref={lineRef}
-        className="h-px mx-6 md:mx-12"
+        className="mx-6 h-px md:mx-12"
         style={{ background: 'linear-gradient(90deg, transparent, rgba(212,169,106,0.18), transparent)' }}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 px-6 md:px-0">
-
-        {/* OB mark */}
-        <div className="footer-col flex flex-col gap-3 px-6 md:px-10 py-10 border-r border-white/[0.04]">
+      <div className="grid grid-cols-2 gap-0 px-6 md:grid-cols-4 md:px-0">
+        <div className="footer-col flex flex-col gap-3 border-r border-white/[0.04] px-6 py-10 md:px-10">
           <span
             className="text-3xl tracking-[0.12em] text-[#d4a96a]/65"
             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
@@ -74,17 +65,16 @@ const Footer = () => {
             OB
           </span>
           <span
-            className="text-[9px] tracking-[0.22em] uppercase text-white/18 leading-relaxed"
+            className="text-[9px] uppercase tracking-[0.22em] leading-relaxed text-white/18"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             Orion Black Studio<br />Brooklyn, NY<br />Est. 2021
           </span>
         </div>
 
-        {/* nav */}
-        <div className="footer-col flex flex-col gap-4 px-6 md:px-10 py-10 border-r border-white/[0.04]">
+        <div className="footer-col flex flex-col gap-4 border-r border-white/[0.04] px-6 py-10 md:px-10">
           <span
-            className="text-[9px] tracking-[0.3em] uppercase text-white/18 mb-1"
+            className="mb-1 text-[9px] uppercase tracking-[0.3em] text-white/18"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             Navigate
@@ -94,7 +84,7 @@ const Footer = () => {
               key={label}
               onClick={() => scrollTo(id)}
               data-cursor="open"
-              className="text-[10px] tracking-[0.22em] uppercase text-white/28 hover:text-white/55 transition-colors duration-300 text-left"
+              className="text-left text-[10px] uppercase tracking-[0.22em] text-white/28 transition-colors duration-300 hover:text-white/55"
               style={{ fontFamily: "'DM Mono', monospace", background: 'none', border: 'none', cursor: 'none' }}
             >
               {label}
@@ -102,45 +92,41 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* clock */}
-        <div className="footer-col flex flex-col justify-center px-6 md:px-10 py-10 border-r border-white/[0.04]">
+        <div className="footer-col flex flex-col justify-center border-r border-white/[0.04] px-6 py-10 md:px-10">
           <Clock />
         </div>
 
-        {/* socials */}
-        <div className="footer-col flex flex-col gap-4 px-6 md:px-10 py-10">
+        <div className="footer-col flex flex-col gap-4 px-6 py-10 md:px-10">
           <span
-            className="text-[9px] tracking-[0.3em] uppercase text-white/18 mb-1"
+            className="mb-1 text-[9px] uppercase tracking-[0.3em] text-white/18"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             Follow
           </span>
           <a
             data-cursor="open"
-            className="text-[10px] tracking-[0.22em] uppercase text-white/28 hover:text-[#d4a96a]/55 transition-colors duration-300 no-underline"
+            className="no-underline text-[10px] uppercase tracking-[0.22em] text-white/28 transition-colors duration-300 hover:text-[#d4a96a]/55"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             Instagram
           </a>
           <a
             data-cursor="open"
-            className="text-[10px] tracking-[0.22em] uppercase text-white/28 hover:text-[#d4a96a]/55 transition-colors duration-300 no-underline"
+            className="no-underline text-[10px] uppercase tracking-[0.22em] text-white/28 transition-colors duration-300 hover:text-[#d4a96a]/55"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             TikTok
           </a>
           <span
-            className="text-[9px] tracking-[0.18em] uppercase text-white/12 mt-auto"
+            className="mt-auto text-[9px] uppercase tracking-[0.18em] text-white/12"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
             © Orion Black 2025
           </span>
         </div>
-
       </div>
-
     </footer>
   )
 }
 
-export default Footer
+export default memo(Footer)

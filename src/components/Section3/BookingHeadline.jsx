@@ -1,9 +1,5 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
-
-gsap.registerPlugin(ScrollTrigger, SplitText)
+import { memo, useEffect, useRef } from 'react'
+import { gsap, SplitText } from '../../lib/gsap'
 
 const availability = [
   { label: 'Current opening', value: 'By inquiry' },
@@ -17,8 +13,10 @@ const BookingHeadline = () => {
   const availRef = useRef(null)
 
   useEffect(() => {
+    let split
+
     const ctx = gsap.context(() => {
-      const split = new SplitText(headlineRef.current, { type: 'chars' })
+      split = new SplitText(headlineRef.current, { type: 'chars' })
 
       gsap.set(split.chars, {
         opacity: 0,
@@ -37,7 +35,7 @@ const BookingHeadline = () => {
         scrollTrigger: {
           trigger: headlineRef.current,
           start: 'top 78%',
-          toggleActions: 'play none none none',
+          once: true,
         },
       })
 
@@ -50,18 +48,21 @@ const BookingHeadline = () => {
         scrollTrigger: {
           trigger: subRef.current,
           start: 'top 84%',
-          toggleActions: 'play none none none',
+          once: true,
         },
       })
     })
 
-    return () => ctx.revert()
+    return () => {
+      ctx.revert()
+      split?.revert()
+    }
   }, [])
 
   return (
     <div className="flex flex-col justify-center gap-10 md:pr-16 lg:pr-24">
       <span
-        className="text-[10px] tracking-[0.3em] uppercase text-white/25"
+        className="text-[10px] uppercase tracking-[0.3em] text-white/25"
         style={{ fontFamily: "'DM Mono', monospace" }}
       >
         03 - Bookings
@@ -101,7 +102,7 @@ const BookingHeadline = () => {
         {availability.map(({ label, value }) => (
           <div key={label} className="flex items-baseline justify-between gap-6">
             <span
-              className="text-[9px] tracking-[0.28em] uppercase text-white/22"
+              className="text-[9px] uppercase tracking-[0.28em] text-white/22"
               style={{ fontFamily: "'DM Mono', monospace" }}
             >
               {label}
@@ -119,4 +120,4 @@ const BookingHeadline = () => {
   )
 }
 
-export default BookingHeadline
+export default memo(BookingHeadline)

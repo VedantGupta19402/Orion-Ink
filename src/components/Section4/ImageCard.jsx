@@ -1,22 +1,20 @@
-import { useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useEffect } from 'react'
+import { memo, useEffect, useRef } from 'react'
+import LazyImage from '../LazyImage'
+import { gsap } from '../../lib/gsap'
+import { usePerformanceProfile } from '../../lib/performance'
 
-gsap.registerPlugin(ScrollTrigger)
-
-// fromDir: 'top' | 'bottom' | 'left' | 'right'
 const entryProps = {
-  top:    { y: -60, x: 0    },
-  bottom: { y: 60,  x: 0    },
-  left:   { y: 0,   x: -60  },
-  right:  { y: 0,   x: 60   },
+  top: { y: -60, x: 0 },
+  bottom: { y: 60, x: 0 },
+  left: { y: 0, x: -60 },
+  right: { y: 0, x: 60 },
 }
 
 const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = '' }) => {
   const cardRef = useRef(null)
   const overlayRef = useRef(null)
   const imgRef = useRef(null)
+  const profile = usePerformanceProfile()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -31,7 +29,7 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
         scrollTrigger: {
           trigger: cardRef.current,
           start: 'top 88%',
-          toggleActions: 'play none none none',
+          once: true,
         },
       })
     }, cardRef)
@@ -40,7 +38,8 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
   }, [fromDir])
 
   const onEnter = () => {
-    // bleed — amber vignette intensifies, image desaturates
+    if (!profile.hoverFxEnabled) return
+
     gsap.to(overlayRef.current, {
       opacity: 1,
       duration: 0.5,
@@ -55,6 +54,8 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
   }
 
   const onLeave = () => {
+    if (!profile.hoverFxEnabled) return
+
     gsap.to(overlayRef.current, {
       opacity: 0,
       duration: 0.5,
@@ -76,18 +77,17 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
-      <img
+      <LazyImage
         ref={imgRef}
         src={image}
         alt={title}
-        className="w-full h-full object-cover"
+        className="h-full w-full object-cover"
         style={{ willChange: 'transform, filter' }}
       />
 
-      {/* amber bleed overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 pointer-events-none opacity-0"
+        className="pointer-events-none absolute inset-0 opacity-0"
         style={{
           background: `
             radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(212,169,106,0.18) 100%),
@@ -96,14 +96,13 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
         }}
       />
 
-      {/* label — always visible at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-4">
         <div className="flex flex-col gap-0.5">
           <span
-            className="text-[9px] tracking-[0.22em] uppercase text-[#d4a96a]/45"
+            className="text-[9px] uppercase tracking-[0.22em] text-[#d4a96a]/45"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
-            {id} — {style}
+            {id} - {style}
           </span>
           <span
             className="text-base text-white/70"
@@ -121,4 +120,4 @@ const ImageCard = ({ image, title, style, id, fromDir = 'bottom', className = ''
   )
 }
 
-export default ImageCard
+export default memo(ImageCard)

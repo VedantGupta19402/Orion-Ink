@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import ImageCard from './ImageCard'
 
 const pieces = [
@@ -5,7 +6,7 @@ const pieces = [
     id: '004',
     title: 'Storm Season',
     style: 'Blackwork',
-    image: '\archive1.png',
+    image: '/archive1.png',
     fromDir: 'left',
     className: 'col-span-1 row-span-2',
     aspect: 'aspect-[3/4]',
@@ -14,7 +15,7 @@ const pieces = [
     id: '005',
     title: 'Liminal',
     style: 'Fine Line',
-    image: '\archive2.png',
+    image: '/archive2.png',
     fromDir: 'top',
     className: 'col-span-1 row-span-1',
     aspect: 'aspect-square',
@@ -23,7 +24,7 @@ const pieces = [
     id: '006',
     title: 'Blood Moon',
     style: 'Japanese Traditional',
-    image: '\archive3.png',
+    image: '/archive3.png',
     fromDir: 'right',
     className: 'col-span-1 row-span-1',
     aspect: 'aspect-square',
@@ -32,7 +33,7 @@ const pieces = [
     id: '007',
     title: 'The Unravelling',
     style: 'Neo-Traditional',
-    image: '\archive4.png',
+    image: '/archive4.png',
     fromDir: 'bottom',
     className: 'col-span-2 row-span-1',
     aspect: 'aspect-[16/7]',
@@ -41,7 +42,7 @@ const pieces = [
     id: '008',
     title: 'Feral',
     style: 'Blackwork / Tebori',
-    image: '\archive5.png',
+    image: '/archive5.png',
     fromDir: 'left',
     className: 'col-span-1 row-span-1',
     aspect: 'aspect-[4/3]',
@@ -50,7 +51,7 @@ const pieces = [
     id: '009',
     title: 'Remnants',
     style: 'Fine Line / Geometric',
-    image: '\archive6.png',
+    image: '/archive6.png',
     fromDir: 'right',
     className: 'col-span-1 row-span-1',
     aspect: 'aspect-[4/3]',
@@ -59,60 +60,51 @@ const pieces = [
 
 const Grid = () => {
   return (
-    <div className="px-6 md:px-12 py-16">
-
-      <div className="flex items-center justify-between mb-8">
+    <div className="px-6 py-16 md:px-12">
+      <div className="mb-8 flex items-center justify-between">
         <span
-          className="text-[10px] tracking-[0.3em] uppercase text-white/20"
+          className="text-[10px] uppercase tracking-[0.3em] text-white/20"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
           The archive
         </span>
-        <a
-          href="/portfolio"
+        <button
+          type="button"
           data-cursor="open"
-          className="text-[10px] tracking-[0.25em] uppercase text-[#d4a96a]/45 hover:text-[#d4a96a] transition-colors duration-300 no-underline"
+          className="text-[10px] uppercase tracking-[0.25em] text-[#d4a96a]/45 transition-colors duration-300 hover:text-[#d4a96a]"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
           Full portfolio →
-        </a>
+        </button>
       </div>
 
-      {/* desktop — asymmetric 3-col grid */}
-      <div className="hidden md:grid grid-cols-3 gap-3 auto-rows-auto">
-
-        {/* row 1: tall left + two stacked right */}
+      <div className="hidden auto-rows-auto grid-cols-3 gap-3 md:grid">
         <div className="row-span-2">
-          <ImageCard {...pieces[0]} className="w-full h-full min-h-[520px]" />
+          <ImageCard {...pieces[0]} className="h-full min-h-[520px] w-full" />
         </div>
         <ImageCard {...pieces[1]} className={`w-full ${pieces[1].aspect}`} />
         <ImageCard {...pieces[2]} className={`w-full ${pieces[2].aspect}`} />
 
-        {/* row 2: wide span bottom */}
         <div className="col-span-2">
           <ImageCard {...pieces[3]} className={`w-full ${pieces[3].aspect}`} />
         </div>
 
-        {/* row 3: two equal */}
         <ImageCard {...pieces[4]} className={`w-full ${pieces[4].aspect}`} />
         <ImageCard {...pieces[5]} className={`w-full ${pieces[5].aspect}`} />
         <div />
-
       </div>
 
-      {/* mobile — single column */}
       <div className="flex flex-col gap-3 md:hidden">
-        {pieces.map((p) => (
+        {pieces.map((piece) => (
           <ImageCard
-            key={p.id}
-            {...p}
-            className={`w-full ${p.aspect}`}
+            key={piece.id}
+            {...piece}
+            className={`w-full ${piece.aspect}`}
           />
         ))}
       </div>
-
     </div>
   )
 }
 
-export default Grid
+export default memo(Grid)

@@ -1,16 +1,17 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
+import { memo, useEffect, useRef } from 'react'
+import LazyImage from '../LazyImage'
+import { gsap } from '../../lib/gsap'
+import { usePerformanceProfile } from '../../lib/performance'
 
 const Image = ({ sectionRef, counterRef }) => {
   const imageRef = useRef(null)
   const overlayRef = useRef(null)
+  const rotateXToRef = useRef(null)
+  const rotateYToRef = useRef(null)
+  const profile = usePerformanceProfile()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-
       gsap.from(imageRef.current, {
         scale: 1.1,
         duration: 1.6,
@@ -30,43 +31,61 @@ const Image = ({ sectionRef, counterRef }) => {
           start: 'top top',
           end: 'bottom bottom',
           scrub: true,
+          invalidateOnRefresh: true,
         },
       })
-
     }, sectionRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [sectionRef])
 
-  const onMouseMove = (e) => {
-    const rect = imageRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
+  useEffect(() => {
+    if (!profile.hoverFxEnabled || !imageRef.current) return undefined
 
-    gsap.to(imageRef.current, {
-      rotateY: x * 6,
-      rotateX: -y * 6,
+    rotateXToRef.current = gsap.quickTo(imageRef.current, 'rotateX', {
+      duration: 0.6,
+      ease: 'power2.out',
+    })
+    rotateYToRef.current = gsap.quickTo(imageRef.current, 'rotateY', {
       duration: 0.6,
       ease: 'power2.out',
     })
 
+    return undefined
+  }, [profile.hoverFxEnabled])
+
+  const onMouseMove = (event) => {
+    if (!profile.hoverFxEnabled || !imageRef.current || !rotateXToRef.current || !rotateYToRef.current) return
+
+    const rect = imageRef.current.getBoundingClientRect()
+    const x = (event.clientX - rect.left) / rect.width - 0.5
+    const y = (event.clientY - rect.top) / rect.height - 0.5
+
+    rotateYToRef.current(x * 6)
+    rotateXToRef.current(-y * 6)
+
     if (overlayRef.current) {
-      overlayRef.current.style.background = `radial-gradient(circle at ${e.clientX - rect.left}px ${e.clientY - rect.top}px, rgba(212,169,106,0.08), transparent 60%)`
+      overlayRef.current.style.background = `radial-gradient(circle at ${event.clientX - rect.left}px ${event.clientY - rect.top}px, rgba(212,169,106,0.08), transparent 60%)`
     }
   }
 
   const onMouseLeave = () => {
-    gsap.to(imageRef.current, {
-      rotateY: 0,
-      rotateX: 0,
-      duration: 0.8,
-      ease: 'elastic.out(1, 0.6)',
-    })
+    if (profile.hoverFxEnabled && rotateXToRef.current && rotateYToRef.current) {
+      rotateXToRef.current(0)
+      rotateYToRef.current(0)
+      gsap.to(imageRef.current, {
+        rotateY: 0,
+        rotateX: 0,
+        duration: 0.8,
+        ease: 'elastic.out(1, 0.6)',
+      })
+    }
+
     if (overlayRef.current) overlayRef.current.style.background = 'transparent'
   }
 
   return (
-    <div className="md:sticky md:top-0 md:h-screen flex items-center">
+    <div className="flex items-center md:sticky md:top-0 md:h-screen">
       <div
         className="relative w-full overflow-hidden"
         style={{ perspective: '1000px' }}
@@ -75,31 +94,33 @@ const Image = ({ sectionRef, counterRef }) => {
       >
         <div
           ref={imageRef}
-          className="relative w-full aspect-[3/4] overflow-hidden"
+          className="relative aspect-[3/4] w-full overflow-hidden"
           style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         >
-          <img
-            src="\featured.png"
+          <LazyImage
+            src="/featured.png"
             alt="Featured tattoo work"
-            className="w-full h-[90%] pt-16 object-cover"
+            className="h-[90%] w-full object-cover pt-16"
+            loading="lazy"
+            fetchPriority="low"
           />
 
           <div
             ref={overlayRef}
-            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            className="pointer-events-none absolute inset-0 transition-all duration-300"
           />
 
           <div
-            className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-overlay"
-            style={{ backgroundImage: 'url(/noise.png)' }}
+            className="pointer-events-none absolute inset-0 opacity-[0.04] mix-blend-overlay"
+            style={{ backgroundImage: 'var(--noise, none)' }}
           />
 
           <div
-            className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between"
+            className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-5"
             style={{ background: 'linear-gradient(to top, rgba(6,5,10,0.85), transparent)' }}
           >
             <span
-              className="text-[10px] tracking-[0.25em] uppercase text-white/50"
+              className="text-[10px] uppercase tracking-[0.25em] text-white/50"
               style={{ fontFamily: "'DM Mono', monospace" }}
             >
               Featured / 2024
@@ -115,7 +136,7 @@ const Image = ({ sectionRef, counterRef }) => {
         </div>
 
         <div
-          className="mt-5 w-12 h-px"
+          className="mt-5 h-px w-12"
           style={{ background: 'linear-gradient(90deg, #d4a96a, transparent)' }}
         />
       </div>
@@ -123,4 +144,4 @@ const Image = ({ sectionRef, counterRef }) => {
   )
 }
 
-export default Image 
+export default memo(Image)

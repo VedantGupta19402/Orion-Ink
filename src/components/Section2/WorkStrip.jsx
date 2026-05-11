@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { memo, useEffect, useRef } from 'react'
+import LazyImage from '../LazyImage'
 import { emitSiteNotice, scrollToSection } from '../../pages/utils/siteEvents'
-
-gsap.registerPlugin(ScrollTrigger)
+import { gsap } from '../../lib/gsap'
+import { usePerformanceProfile } from '../../lib/performance'
 
 const works = [
   {
@@ -35,6 +34,7 @@ const works = [
 const WorkStrip = () => {
   const stripRef = useRef(null)
   const cardsRef = useRef([])
+  const profile = usePerformanceProfile()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -50,12 +50,12 @@ const WorkStrip = () => {
           scrollTrigger: {
             trigger: stripRef.current,
             start: 'top 75%',
-            toggleActions: 'play none none none',
+            once: true,
           },
         })
       })
 
-      if (window.innerWidth >= 1024) {
+      if (!profile.isMobileViewport) {
         gsap.to(stripRef.current, {
           x: () => -(stripRef.current.scrollWidth - window.innerWidth + 96),
           ease: 'none',
@@ -64,19 +64,20 @@ const WorkStrip = () => {
             start: 'top 60%',
             end: () => `+=${stripRef.current.scrollWidth}`,
             scrub: 1.2,
+            invalidateOnRefresh: true,
           },
         })
       }
     })
 
     return () => ctx.revert()
-  }, [])
+  }, [profile.isMobileViewport])
 
   return (
     <div className="relative mt-10 pb-24 md:mt-0">
       <div className="mb-8 flex items-center justify-between px-6 md:px-12">
         <span
-          className="text-[10px] tracking-[0.3em] uppercase text-white/25"
+          className="text-[10px] uppercase tracking-[0.3em] text-white/25"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
           Recent work
@@ -90,7 +91,7 @@ const WorkStrip = () => {
               message: 'This frontend demo keeps the gallery on-page, so you can explore the selected works right here.',
             })
           }}
-          className="text-[10px] tracking-[0.25em] uppercase text-[#d4a96a]/60 transition-colors duration-300 hover:text-[#d4a96a]"
+          className="text-[10px] uppercase tracking-[0.25em] text-[#d4a96a]/60 transition-colors duration-300 hover:text-[#d4a96a]"
           style={{ fontFamily: "'DM Mono', monospace" }}
         >
           View all {'->'}
@@ -109,13 +110,15 @@ const WorkStrip = () => {
               cardsRef.current[index] = element
             }}
             className="group relative w-full flex-shrink-0 sm:w-full md:w-full lg:w-[28vw]"
-            style={{ cursor: 'none' }}
+            style={{ cursor: profile.hoverFxEnabled ? 'none' : 'auto' }}
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden">
-              <img
+              <LazyImage
                 src={work.image}
                 alt={work.title}
                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                loading="lazy"
+                fetchPriority="low"
               />
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -126,7 +129,7 @@ const WorkStrip = () => {
             <div className="mt-4 flex items-start justify-between">
               <div className="flex flex-col gap-1">
                 <span
-                  className="text-[10px] tracking-[0.25em] uppercase text-white/30"
+                  className="text-[10px] uppercase tracking-[0.25em] text-white/30"
                   style={{ fontFamily: "'DM Mono', monospace" }}
                 >
                   {work.id} - {work.category}
@@ -140,13 +143,13 @@ const WorkStrip = () => {
               </div>
               <div className="ml-4 flex shrink-0 flex-col items-end gap-1">
                 <span
-                  className="text-[9px] tracking-[0.2em] uppercase text-white/20"
+                  className="text-[9px] uppercase tracking-[0.2em] text-white/20"
                   style={{ fontFamily: "'DM Mono', monospace" }}
                 >
                   {work.year}
                 </span>
                 <span
-                  className="text-[9px] tracking-[0.2em] uppercase text-[#d4a96a]/40"
+                  className="text-[9px] uppercase tracking-[0.2em] text-[#d4a96a]/40"
                   style={{ fontFamily: "'DM Mono', monospace" }}
                 >
                   {work.duration}
@@ -165,4 +168,4 @@ const WorkStrip = () => {
   )
 }
 
-export default WorkStrip
+export default memo(WorkStrip)

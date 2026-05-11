@@ -1,108 +1,133 @@
-import { useRef, useEffect, useState, useMemo, useId } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useIsVisible } from '../../lib/gsap'
 
 const CurvedLoop = ({
   marqueeText = 'ORION INK • ',
   speed = 2,
   className = '',
   direction = 'left',
-  interactive = true
+  interactive = true,
 }) => {
-  const text = useMemo(() => marqueeText + '\u00A0', [marqueeText]);
+  const text = useMemo(() => marqueeText + '\u00A0', [marqueeText])
 
-  const measureRef = useRef(null);
-  const textPathRef = useRef(null);
-  const [spacing, setSpacing] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const uid = useId();
-  const pathId = `line-${uid}`;
-  
-  const pathD = `M-5000,120 L5000,120`;
+  const measureRef = useRef(null)
+  const textPathRef = useRef(null)
+  const offsetRef = useRef(0)
+  const [spacing, setSpacing] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const uid = useId()
+  const pathId = `line-${uid}`
+  const wrapRef = useRef(null)
+  const isVisible = useIsVisible(wrapRef, {
+    rootMargin: '250px 0px',
+    threshold: 0,
+    initial: true,
+  })
 
-  const dragRef = useRef(false);
-  const lastXRef = useRef(0);
-  const dirRef = useRef(direction);
-  const velRef = useRef(0);
+  const dragRef = useRef(false)
+  const lastXRef = useRef(0)
+  const dirRef = useRef(direction)
+  const velRef = useRef(0)
+  const pathD = 'M-5000,120 L5000,120'
 
-  const totalText = useMemo(() => {
-    return spacing ? Array(10).fill(text).join('') : text;
-  }, [text, spacing]);
+  const totalText = useMemo(() => (
+    spacing ? Array(10).fill(text).join('') : text
+  ), [spacing, text])
 
-  const ready = spacing > 0;
+  const ready = spacing > 0
 
   useEffect(() => {
-    if (measureRef.current) setSpacing(measureRef.current.getComputedTextLength());
-  }, [text, className]);
-
-  useEffect(() => {
-    if (!spacing) return;
-    const initial = -spacing;
-    if (textPathRef.current) {
-      textPathRef.current.setAttribute('startOffset', initial + 'px');
-      setOffset(initial);
+    const measure = () => {
+      if (!measureRef.current) return
+      setSpacing(measureRef.current.getComputedTextLength())
     }
-  }, [spacing]);
+
+    measure()
+
+    if (typeof ResizeObserver === 'undefined' || !wrapRef.current) {
+      window.addEventListener('resize', measure, { passive: true })
+      return () => window.removeEventListener('resize', measure)
+    }
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(wrapRef.current)
+
+    return () => observer.disconnect()
+  }, [text, className])
 
   useEffect(() => {
-    if (!spacing || !ready) return;
-    let frame = 0;
+    if (!spacing || !textPathRef.current) return
+
+    offsetRef.current = -spacing
+    textPathRef.current.setAttribute('startOffset', `${offsetRef.current}px`)
+  }, [spacing])
+
+  useEffect(() => {
+    if (!spacing || !ready || !isVisible) return undefined
+
+    let frame = 0
     const step = () => {
       if (!dragRef.current && textPathRef.current) {
-        const delta = dirRef.current === 'right' ? speed : -speed;
-        const currentOffset = parseFloat(textPathRef.current.getAttribute('startOffset') || '0');
-        
-        let newOffset = currentOffset + delta;
+        const delta = dirRef.current === 'right' ? speed : -speed
+        let nextOffset = offsetRef.current + delta
 
-        if (newOffset <= -(spacing * 2)) newOffset += spacing;
-        if (newOffset >= 0) newOffset -= spacing;
+        if (nextOffset <= -(spacing * 2)) nextOffset += spacing
+        if (nextOffset >= 0) nextOffset -= spacing
 
-        textPathRef.current.setAttribute('startOffset', newOffset + 'px');
+        offsetRef.current = nextOffset
+        textPathRef.current.setAttribute('startOffset', `${nextOffset}px`)
       }
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [spacing, speed, ready]);
 
-  const onPointerDown = e => {
-    if (!interactive) return;
-    dragRef.current = true;
-    lastXRef.current = e.clientX;
-    e.target.setPointerCapture(e.pointerId);
-  };
+      frame = requestAnimationFrame(step)
+    }
 
-  const onPointerMove = e => {
-    if (!interactive || !dragRef.current || !textPathRef.current) return;
-    const dx = e.clientX - lastXRef.current;
-    lastXRef.current = e.clientX;
-    velRef.current = dx;
-    const currentOffset = parseFloat(textPathRef.current.getAttribute('startOffset') || '0');
-    let newOffset = currentOffset + dx;
-    
-    if (newOffset <= -(spacing * 2)) newOffset += spacing;
-    if (newOffset >= 0) newOffset -= spacing;
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [isVisible, ready, spacing, speed])
 
-    textPathRef.current.setAttribute('startOffset', newOffset + 'px');
-  };
+  const onPointerDown = (event) => {
+    if (!interactive) return
+    dragRef.current = true
+    setIsDragging(true)
+    lastXRef.current = event.clientX
+    event.target.setPointerCapture(event.pointerId)
+  }
+
+  const onPointerMove = (event) => {
+    if (!interactive || !dragRef.current || !textPathRef.current) return
+
+    const dx = event.clientX - lastXRef.current
+    lastXRef.current = event.clientX
+    velRef.current = dx
+
+    let nextOffset = offsetRef.current + dx
+
+    if (nextOffset <= -(spacing * 2)) nextOffset += spacing
+    if (nextOffset >= 0) nextOffset -= spacing
+
+    offsetRef.current = nextOffset
+    textPathRef.current.setAttribute('startOffset', `${nextOffset}px`)
+  }
 
   const endDrag = () => {
-    if (!interactive) return;
-    dragRef.current = false;
-    dirRef.current = velRef.current > 0 ? 'right' : 'left';
-  };
+    if (!interactive) return
+    dragRef.current = false
+    setIsDragging(false)
+    dirRef.current = velRef.current > 0 ? 'right' : 'left'
+  }
 
   return (
     <div
-      className={`w-full overflow-hidden select-none touch-none flex items-center ${ready ? 'visible' : 'invisible'}`}
-      style={{ cursor: interactive ? (dragRef.current ? 'grabbing' : 'grab') : 'auto' }}
+      ref={wrapRef}
+      className={`flex w-full select-none items-center overflow-hidden touch-none ${ready ? 'visible' : 'invisible'}`}
+      style={{ cursor: interactive ? (isDragging ? 'grabbing' : 'grab') : 'auto' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerLeave={endDrag}
     >
-      {/* ✅ Responsive + visible height */}
-      <svg className="w-full h-[80px] sm:h-[100px] md:h-[8vw] lg:h-[6vw] block" viewBox="0 0 1440 240">
-        
-        <text ref={measureRef} xmlSpace="preserve" className="invisible opacity-0 pointer-events-none">
+      <svg className="block h-[80px] w-full sm:h-[100px] md:h-[8vw] lg:h-[6vw]" viewBox="0 0 1440 240">
+        <text ref={measureRef} xmlSpace="preserve" className="pointer-events-none invisible opacity-0">
           {text}
         </text>
 
@@ -111,21 +136,20 @@ const CurvedLoop = ({
         </defs>
 
         {ready && (
-          <text 
+          <text
             fontWeight="bold"
-            fontSize="40"  // 🔥 ensures minimum readable size
-            xmlSpace="preserve" 
+            fontSize="40"
+            xmlSpace="preserve"
             className={`${className} sm:text-[32px] md:text-[40px] lg:text-[56px]`}
           >
-            <textPath ref={textPathRef} href={`#${pathId}`} startOffset={offset + 'px'}>
+            <textPath ref={textPathRef} href={`#${pathId}`} startOffset="0px">
               {totalText}
             </textPath>
           </text>
         )}
-
       </svg>
     </div>
-  );
-};
+  )
+}
 
-export default CurvedLoop;
+export default memo(CurvedLoop)
